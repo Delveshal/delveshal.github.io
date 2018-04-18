@@ -1,0 +1,21 @@
+language: node_js
+node_js: stable
+branches:
+  only:
+  - source
+
+install:
+  - npm install
+
+script:
+  - hexo cl
+  - hexo g
+
+after_script:
+  - cd ./public
+  - git init
+  - git config user.name "Delveshal"
+  - git config user.email "327681132@qq.com"
+  - git add .
+  - git commit -m "update"
+  - git push --quiet --force https://$REPO_TOKEN@github.com/Delveshal/delveshal.github.io.git master
