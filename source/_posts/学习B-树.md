@@ -3,6 +3,7 @@ title: 学习B-树
 date: 2018-04-22 21:29:21
 tags: [tree,balance-tree]
 categories: [tree]
+mathjax: true
 ---
 
 # 学习B-树
