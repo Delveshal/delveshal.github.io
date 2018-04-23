@@ -12,6 +12,7 @@ categories: kubernetes
 4. **不要直接使用在生产环境**
 
 #  创建 Postgresql 使用的ConfigMap
+<!-- more -->
 
 一般配置 Postgresql 需要配置 `postgresql.conf` 和 `pg_hba.conf` 两个文件。
 这里的 ConfigMap 我只配置了 `pg_hba.conf` 然后通过数据卷挂载把配置文件挂载进去。

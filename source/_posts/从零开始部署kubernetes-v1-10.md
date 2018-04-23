@@ -30,6 +30,7 @@ UUID=331095c3-4a02-450c-ad2b-176f2013b4d2 /boot           ext2    defaults      
 # 下载二进制文件
 [最新release版本](https://github.com/kubernetes/kubernetes/releases/latest)
 ![image.png](https://upload-images.jianshu.io/upload_images/8053527-0fdb2437a5390bdf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+<!-- more -->
 
 最下面一行是的链接是二进制文件
 [1.10版本](https://dl.k8s.io/v1.10.0/kubernetes.tar.gz)

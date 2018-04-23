@@ -19,6 +19,7 @@ Here are some examples. Inputs are in the left-hand column and its corresponding
 1,1,5 → 1,5,1
 
 # 解题思路
+<!-- more -->
 
 题目的意思的找到当前全排列的下一个排列序列。
 例如 1,2,3 的全排列
