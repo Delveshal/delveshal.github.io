@@ -2,6 +2,7 @@
 title: leetcode 79. Word Search
 date: 2018-05-06 17:37:16
 tags: [dfs]
+categories: [leetcode]
 ---
 
 # Description

@@ -1,7 +1,8 @@
 ---
 title: leetcode 78. Subsets
 date: 2018-05-06 17:42:03
-tags:
+tags: [set]
+categories: [leetcode]
 ---
 
 # Description
