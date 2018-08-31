@@ -26,6 +26,7 @@ categories: [go]
 系统调用 `sendfile()` 就是用来解决这个底性能问题的。文件可以直接送到socket上，不需要经过用户空间。
 ![sendfile()](https://upload-images.jianshu.io/upload_images/8053527-dfbdd2afa6e472cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+<!-- more -->
 ## sendfile()
 
 ```
@@ -173,4 +174,4 @@ func (c *TCPConn) readFrom(r io.Reader) (int64, error) {
 	return genericReadFrom(c, r)
 }
 ```
-再底层的就是go对系统调用的`splice()`和`sendFile()`的封装了。
+再底层的就是go对系统调用`splice()`和`sendFile()`的封装了。
