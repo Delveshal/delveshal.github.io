@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.6" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.0.6">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.0.6" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.0.6',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="实现写文件的原子性最近在阅读docker源码时发现保存container configuration的时候用到atomicFileWriter把写文件变成原子操作，源码。 实现步骤 使用ioutil.TempFile新建一个临时文件 跟平时一样使用Write写入文件 需要 close 文件时先调用sync函数保证数据落盘，然后才真正 close 文件，修改权限等，最后利用系统调用os.Rename">
+<meta name="keywords" content="docker,file">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现写文件的原子性">
+<meta property="og:url" content="https://delveshal.github.io/2018/06/04/实现写文件的原子性/index.html">
+<meta property="og:site_name" content="delveshal&#39;s blog">
+<meta property="og:description" content="实现写文件的原子性最近在阅读docker源码时发现保存container configuration的时候用到atomicFileWriter把写文件变成原子操作，源码。 实现步骤 使用ioutil.TempFile新建一个临时文件 跟平时一样使用Write写入文件 需要 close 文件时先调用sync函数保证数据落盘，然后才真正 close 文件，修改权限等，最后利用系统调用os.Rename">
+<meta property="og:updated_time" content="2018-08-31T04:07:25.523Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="实现写文件的原子性">
+<meta name="twitter:description" content="实现写文件的原子性最近在阅读docker源码时发现保存container configuration的时候用到atomicFileWriter把写文件变成原子操作，源码。 实现步骤 使用ioutil.TempFile新建一个临时文件 跟平时一样使用Write写入文件 需要 close 文件时先调用sync函数保证数据落盘，然后才真正 close 文件，修改权限等，最后利用系统调用os.Rename">
+
+
+
+
+
+
+  <link rel="canonical" href="https://delveshal.github.io/2018/06/04/实现写文件的原子性/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>实现写文件的原子性 | delveshal's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> 
+
+<div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">delveshal's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+          
+  <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+</li>
+
+      
+
+      
+    </ul>
+  
+
+  
+    
+
+    
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+    
+
+  
+
+
+  
+
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://delveshal.github.io/2018/06/04/实现写文件的原子性/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="delveshal">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="delveshal's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">实现写文件的原子性</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-04T21:06:58+00:00">2018-06-04</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/file/" itemprop="url" rel="index"><span itemprop="name">file</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="实现写文件的原子性"><a href="#实现写文件的原子性" class="headerlink" title="实现写文件的原子性"></a>实现写文件的原子性</h1><p>最近在阅读docker源码时发现保存container configuration的时候用到<code>atomicFileWriter</code>把写文件变成原子操作，<a href="https://github.com/moby/moby/blob/master/pkg/ioutils/fswriters.go" target="_blank" rel="noopener">源码</a>。</p>
+<h2 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h2><ol>
+<li>使用<code>ioutil.TempFile</code>新建一个临时文件</li>
+<li>跟平时一样使用<code>Write</code>写入文件</li>
+<li>需要 close 文件时先调用<code>sync</code>函数保证数据落盘，然后才真正 close 文件，修改权限等，最后利用系统调用<code>os.Rename</code></li>
+</ol>
+<h2 id="为什么可以这样做"><a href="#为什么可以这样做" class="headerlink" title="为什么可以这样做"></a>为什么可以这样做</h2><a id="more"></a>
+<p>第一步首先要知道TempFile是怎么实现的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">func TempFile(dir, prefix string) (f *os.File, err error) &#123;</span><br><span class="line">	if dir == &quot;&quot; &#123;</span><br><span class="line">		dir = os.TempDir()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	nconflict := 0</span><br><span class="line">	for i := 0; i &lt; 10000; i++ &#123;</span><br><span class="line">		name := filepath.Join(dir, prefix+nextSuffix())</span><br><span class="line">		f, err = os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)</span><br><span class="line">		if os.IsExist(err) &#123;</span><br><span class="line">			if nconflict++; nconflict &gt; 10 &#123;</span><br><span class="line">				randmu.Lock()</span><br><span class="line">				rand = reseed()</span><br><span class="line">				randmu.Unlock()</span><br><span class="line">			&#125;</span><br><span class="line">			continue</span><br><span class="line">		&#125;</span><br><span class="line">		break</span><br><span class="line">	&#125;</span><br><span class="line">	return</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主要是<code>os.O_EXCL</code>参数，作用是保证<code>os.O_CREATE</code> create 文件之前，保证文件不存在才创建。<br>for 循环是使用前缀加随机数创建临时文件保证没有冲突，重试10000次都冲突返回错误。</p>
+<p>对于后面几步，首先要知道 inode<br>维基百科的定义</p>
+<blockquote>
+<p>The <strong>inode</strong> is a <a href="https://en.wikipedia.org/wiki/Data_structure" title="Data structure" target="_blank" rel="noopener">data structure</a> in a <a href="https://en.wikipedia.org/wiki/Unix_filesystem" title="Unix filesystem" target="_blank" rel="noopener">Unix-style file system</a> that describes a <a href="https://en.wikipedia.org/wiki/Filesystem" title="Filesystem" target="_blank" rel="noopener">filesystem</a> object such as a <a href="https://en.wikipedia.org/wiki/Computer_file" title="Computer file" target="_blank" rel="noopener">file</a> or a <a href="https://en.wikipedia.org/wiki/Directory_(computing" target="_blank" rel="noopener">directory</a> “Directory (computing)”). Each inode stores the attributes and disk block location(s) of the object’s data.<sup><a href="https://en.wikipedia.org/wiki/Inode#cite_note-1" target="_blank" rel="noopener">[1]</a></sup> Filesystem object attributes may include <a href="https://en.wikipedia.org/wiki/Metadata" title="Metadata" target="_blank" rel="noopener">metadata</a> (times of last change,<sup><a href="https://en.wikipedia.org/wiki/Inode#cite_note-2" target="_blank" rel="noopener">[2]</a></sup> access, modification), as well as owner and <a href="https://en.wikipedia.org/wiki/File_system_permissions" title="File system permissions" target="_blank" rel="noopener">permission</a> data.<sup><a href="https://en.wikipedia.org/wiki/Inode#cite_note-3" target="_blank" rel="noopener">[3]</a></sup></p>
+</blockquote>
+<p>inode 是unix类文件系统中的数据结构，用于描述文件系统对象，例如文件或者目录。每一个inode都存储着对象的属性和数据存储在磁盘块的位置。文件系统对象属性可能包含了元信息，拥有者和权限。</p>
+<h2 id="rm"><a href="#rm" class="headerlink" title="rm"></a>rm</h2><p>当我们使用<code>rm</code>删除文件时，首先会删除文件名对这个 inode 的链接，如果 inode 链接计数器为零并且<strong>没有进程占用</strong>，那么就会删除这个文件（旧数据会存在磁盘，只是没有inode记录）。<code>rm</code> 命令底层使用<code>unlink</code>实现的。unlink 删除的是符号链接本身，而不是其指向的文件。</p>
+<h2 id="rename"><a href="#rename" class="headerlink" title="rename"></a>rename</h2><p>当我们使用 <code>rename</code> 时，实际上是删除旧的 inode 节点，然后新建一个一样的，底层数据没有被删除。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>docker源码中实现的<code>atomicFileWriter</code>，如果文件已经被读进程打开然后被写进程调用<code>rename</code>，那么读进程还是可以通过文件描述符读取到“旧”的文件，但是新的文件路径已经指向新的 inode，并且可以读到新的数据。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/docker/" rel="tag"># docker</a>
+          
+            <a href="/tags/file/" rel="tag"># file</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/04/docker之路：docker-开发环境配置/" rel="next" title="docker之路：docker 开发环境配置">
+                <i class="fa fa-chevron-left"></i> docker之路：docker 开发环境配置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/11/docker之路：overlay2/" rel="prev" title="docker之路：overlay2">
+                docker之路：overlay2 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">delveshal</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#实现写文件的原子性"><span class="nav-number">1.</span> <span class="nav-text">实现写文件的原子性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实现步骤"><span class="nav-number">1.1.</span> <span class="nav-text">实现步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么可以这样做"><span class="nav-number">1.2.</span> <span class="nav-text">为什么可以这样做</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rm"><span class="nav-number">1.3.</span> <span class="nav-text">rm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rename"><span class="nav-number">1.4.</span> <span class="nav-text">rename</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">2.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate"> 
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">delveshal</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Muse</a> v6.0.6</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.6"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.6"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.6"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.6"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.6"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

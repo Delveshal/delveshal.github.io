@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.6" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.0.6">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.0.6" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.0.6',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="zero-copy transfer平时写 http server 会接触到传输文件的问题。最简单的版本大概是这样子的。12345678for &amp;#123;	n, _ := file.Read(buf)	if n &amp;gt; 0 &amp;#123;		w.Write(buf[:n])	&amp;#125;else&amp;#123;		break	&amp;#125;&amp;#125; 对于一般的程序来说是没有问题的，但是如果需要频繁">
+<meta name="keywords" content="go,io">
+<meta property="og:type" content="article">
+<meta property="og:title" content="zero copy transfer">
+<meta property="og:url" content="https://delveshal.github.io/2018/08/31/zero-copy-transfer/index.html">
+<meta property="og:site_name" content="delveshal&#39;s blog">
+<meta property="og:description" content="zero-copy transfer平时写 http server 会接触到传输文件的问题。最简单的版本大概是这样子的。12345678for &amp;#123;	n, _ := file.Read(buf)	if n &amp;gt; 0 &amp;#123;		w.Write(buf[:n])	&amp;#125;else&amp;#123;		break	&amp;#125;&amp;#125; 对于一般的程序来说是没有问题的，但是如果需要频繁">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/8053527-1d1055e745391c9e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/8053527-dfbdd2afa6e472cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-08-31T04:07:25.523Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="zero copy transfer">
+<meta name="twitter:description" content="zero-copy transfer平时写 http server 会接触到传输文件的问题。最简单的版本大概是这样子的。12345678for &amp;#123;	n, _ := file.Read(buf)	if n &amp;gt; 0 &amp;#123;		w.Write(buf[:n])	&amp;#125;else&amp;#123;		break	&amp;#125;&amp;#125; 对于一般的程序来说是没有问题的，但是如果需要频繁">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/8053527-1d1055e745391c9e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+
+
+
+  <link rel="canonical" href="https://delveshal.github.io/2018/08/31/zero-copy-transfer/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>zero copy transfer | delveshal's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> 
+
+<div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">delveshal's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+          
+  <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+</li>
+
+      
+
+      
+    </ul>
+  
+
+  
+    
+
+    
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+    
+
+  
+
+
+  
+
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://delveshal.github.io/2018/08/31/zero-copy-transfer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="delveshal">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="delveshal's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">zero copy transfer</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-31T12:00:00+00:00">2018-08-31</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="zero-copy-transfer"><a href="#zero-copy-transfer" class="headerlink" title="zero-copy transfer"></a>zero-copy transfer</h1><p>平时写 http server 会接触到传输文件的问题。最简单的版本大概是这样子的。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> &#123;</span><br><span class="line">	n, _ := file.Read(buf)</span><br><span class="line">	<span class="keyword">if</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">		w.Write(buf[:n])</span><br><span class="line">	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">break</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对于一般的程序来说是没有问题的，但是如果需要频繁地传输大文件，那么这种办法效率不够高。因为这里不断地调用两个系统调用，<code>read()</code> 和 <code>write()</code>。对操作系统稍微熟悉的都会知道系统调用是在<strong>内核态</strong>执行而用户程序是跑在<strong>用户态</strong>。</p>
+<p>读取文件就会先从磁盘文件读到内核缓冲区然后再拷贝到用户空间缓冲区，写操作也要先写到内核缓冲区然后再发送。<br><img src="https://upload-images.jianshu.io/upload_images/8053527-1d1055e745391c9e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="read+write"></p>
+<p>系统调用 <code>sendfile()</code> 就是用来解决这个底性能问题的。文件可以直接送到socket上，不需要经过用户空间。<br><img src="https://upload-images.jianshu.io/upload_images/8053527-dfbdd2afa6e472cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="sendfile()"></p>
+<a id="more"></a>
+<h2 id="sendfile"><a href="#sendfile" class="headerlink" title="sendfile()"></a>sendfile()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># include &lt;sys/sendfile.h&gt;</span><br><span class="line">ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);</span><br></pre></td></tr></table></figure>
+<p><code>in_fd</code> 是代表输入文件的文件描述符，<code>out_fd</code> 是代表输出文件的文件描述符。<code>out_id</code> 必须为 socket (linux 2.6.33 开始可以是任何文件)。 <code>in_fd</code> 指向的文件必须为可以进行 <code>mmap()</code> 操作的，通常为普通文件。</p>
+<h2 id="splice"><a href="#splice" class="headerlink" title="splice()"></a>splice()</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#define _GNU_SOURCE         /* See feature_test_macros(7) */</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">ssize_t splice(int fd_in, loff_t *off_in, int fd_out,</span><br><span class="line">               loff_t *off_out, size_t len, unsigned int flags);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>splice() moves data between two file descriptors without copying between kernel address space and user address space. It transfers up to len bytes of data from the file descriptor fd_in to the file descriptor fd_out, where one of the descriptors must refer to a pipe.</p>
+</blockquote>
+<h2 id="io-Copy"><a href="#io-Copy" class="headerlink" title="io.Copy()"></a>io.Copy()</h2><p>当我们需要响应请求并返回文件时，我们可以使用<code>io.Copy()</code>，因为底层使用了上面提及的<code>splice()</code>和<code>sendfile()</code>系统调用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func Copy(dst Writer, src Reader) (written int64, err error) &#123;</span><br><span class="line">	return copyBuffer(dst, src, nil)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func CopyBuffer(dst Writer, src Reader, buf []byte) (written int64, err error) &#123;</span><br><span class="line">	if buf != nil &amp;&amp; len(buf) == 0 &#123;</span><br><span class="line">		panic(&quot;empty buffer in io.CopyBuffer&quot;)</span><br><span class="line">	&#125;</span><br><span class="line">	return copyBuffer(dst, src, buf)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func copyBuffer(dst Writer, src Reader, buf []byte) (written int64, err error) &#123;</span><br><span class="line">	// If the reader has a WriteTo method, use it to do the copy.</span><br><span class="line">	// Avoids an allocation and a copy.</span><br><span class="line">	if wt, ok := src.(WriterTo); ok &#123;</span><br><span class="line">		return wt.WriteTo(dst)</span><br><span class="line">	&#125;</span><br><span class="line">	// Similarly, if the writer has a ReadFrom method, use it to do the copy.</span><br><span class="line">	if rt, ok := dst.(ReaderFrom); ok &#123;</span><br><span class="line">		return rt.ReadFrom(src)</span><br><span class="line">	&#125;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<p>上面的源码中可以看到，两个  type assertion。 现在关注一下第二个 <code>dst.(ReaderFrom)</code>。</p>
+<p>因为我们传惨第一个是 <code>http.ResponseWriter</code>，所以实现这个接口的struct是下面这个。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">// A response represents the server side of an HTTP response.</span><br><span class="line">type response struct &#123;</span><br><span class="line">	conn             *conn</span><br><span class="line">	req              *Request // request for this response</span><br><span class="line">	reqBody          io.ReadCloser</span><br><span class="line">	cancelCtx        context.CancelFunc // when ServeHTTP exits</span><br><span class="line">	wroteHeader      bool               // reply header has been (logically) written</span><br><span class="line">	wroteContinue    bool               // 100 Continue response was written</span><br><span class="line">	wants10KeepAlive bool               // HTTP/1.0 w/ Connection &quot;keep-alive&quot;</span><br><span class="line">	wantsClose       bool               // HTTP request has Connection &quot;close&quot;</span><br><span class="line"></span><br><span class="line">	w  *bufio.Writer // buffers output in chunks to chunkWriter</span><br><span class="line">	cw chunkWriter</span><br><span class="line"></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<p>找到具体实现<code>ReadFrom</code>的地方<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">// ReadFrom is here to optimize copying from an *os.File regular file</span><br><span class="line">// to a *net.TCPConn with sendfile.</span><br><span class="line">func (w *response) ReadFrom(src io.Reader) (n int64, err error) &#123;</span><br><span class="line">	// Our underlying w.conn.rwc is usually a *TCPConn (with its</span><br><span class="line">	// own ReadFrom method). If not, or if our src isn&apos;t a regular</span><br><span class="line">	// file, just fall back to the normal copy method.</span><br><span class="line">	rf, ok := w.conn.rwc.(io.ReaderFrom)</span><br><span class="line">	regFile, err := srcIsRegularFile(src)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		return 0, err</span><br><span class="line">	&#125;</span><br><span class="line">	if !ok || !regFile &#123;</span><br><span class="line">		bufp := copyBufPool.Get().(*[]byte)</span><br><span class="line">		defer copyBufPool.Put(bufp)</span><br><span class="line">		return io.CopyBuffer(writerOnly&#123;w&#125;, src, *bufp)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	// sendfile path:</span><br><span class="line"></span><br><span class="line">	if !w.wroteHeader &#123;</span><br><span class="line">		w.WriteHeader(StatusOK)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	if w.needsSniff() &#123;</span><br><span class="line">		n0, err := io.Copy(writerOnly&#123;w&#125;, io.LimitReader(src, sniffLen))</span><br><span class="line">		n += n0</span><br><span class="line">		if err != nil &#123;</span><br><span class="line">			return n, err</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	w.w.Flush()  // get rid of any previous writes</span><br><span class="line">	w.cw.flush() // make sure Header is written; flush data to rwc</span><br><span class="line"></span><br><span class="line">	// Now that cw has been flushed, its chunking field is guaranteed initialized.</span><br><span class="line">	if !w.cw.chunking &amp;&amp; w.bodyAllowed() &#123;</span><br><span class="line">		n0, err := rf.ReadFrom(src)</span><br><span class="line">		n += n0</span><br><span class="line">		w.written += n0</span><br><span class="line">		return n, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	n0, err := io.Copy(writerOnly&#123;w&#125;, src)</span><br><span class="line">	n += n0</span><br><span class="line">	return n, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>函数开头有一段注释已经说明调用的底层是 <code>*TCPConn</code> 的 <code>ReadFrom</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// ReadFrom implements the io.ReaderFrom ReadFrom method.</span><br><span class="line">func (c *TCPConn) ReadFrom(r io.Reader) (int64, error) &#123;</span><br><span class="line">	if !c.ok() &#123;</span><br><span class="line">		return 0, syscall.EINVAL</span><br><span class="line">	&#125;</span><br><span class="line">	n, err := c.readFrom(r)</span><br><span class="line">	if err != nil &amp;&amp; err != io.EOF &#123;</span><br><span class="line">		err = &amp;OpError&#123;Op: &quot;readfrom&quot;, Net: c.fd.net, Source: c.fd.laddr, Addr: c.fd.raddr, Err: err&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	return n, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>终于出现了 <code>splice()</code> 和 <code>sendFile()</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">func (c *TCPConn) readFrom(r io.Reader) (int64, error) &#123;</span><br><span class="line">	if n, err, handled := splice(c.fd, r); handled &#123;</span><br><span class="line">		return n, err</span><br><span class="line">	&#125;</span><br><span class="line">	if n, err, handled := sendFile(c.fd, r); handled &#123;</span><br><span class="line">		return n, err</span><br><span class="line">	&#125;</span><br><span class="line">	return genericReadFrom(c, r)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>再底层的就是go对系统调用<code>splice()</code>和<code>sendFile()</code>的封装了。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/go/" rel="tag"># go</a>
+          
+            <a href="/tags/io/" rel="tag"># io</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/12/runc-笔记/" rel="next" title="runc 笔记">
+                <i class="fa fa-chevron-left"></i> runc 笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">delveshal</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#zero-copy-transfer"><span class="nav-number">1.</span> <span class="nav-text">zero-copy transfer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sendfile"><span class="nav-number">1.1.</span> <span class="nav-text">sendfile()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#splice"><span class="nav-number">1.2.</span> <span class="nav-text">splice()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#io-Copy"><span class="nav-number">1.3.</span> <span class="nav-text">io.Copy()</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate"> 
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">delveshal</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Muse</a> v6.0.6</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.6"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.6"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.6"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.6"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.6"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

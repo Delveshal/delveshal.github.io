@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.6" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.0.6">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.0.6">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.0.6" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.0.6',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="leetcode 31. Next Permutation解题思路题目的意思的找到当前全排列的下一个排列序列。例如 1,2,3 的全排列1,2,31,3,22,1,32,3,13,1,23,2,1 那么 1,2,3 下一个就是 1,3,2。规定： 最后一个的下一个是第一个。 3,2,1 -&amp;gt; 1,2,3 首先，很明显可以发现：如果一个序列是非递增，那么这个序列是不能再重排，获得一个更大的数。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="leetcode 题解（一）">
+<meta property="og:url" content="https://delveshal.github.io/2018/05/14/leetcode-题解（一）/index.html">
+<meta property="og:site_name" content="delveshal&#39;s blog">
+<meta property="og:description" content="leetcode 31. Next Permutation解题思路题目的意思的找到当前全排列的下一个排列序列。例如 1,2,3 的全排列1,2,31,3,22,1,32,3,13,1,23,2,1 那么 1,2,3 下一个就是 1,3,2。规定： 最后一个的下一个是第一个。 3,2,1 -&amp;gt; 1,2,3 首先，很明显可以发现：如果一个序列是非递增，那么这个序列是不能再重排，获得一个更大的数。">
+<meta property="og:updated_time" content="2018-08-31T04:07:25.523Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="leetcode 题解（一）">
+<meta name="twitter:description" content="leetcode 31. Next Permutation解题思路题目的意思的找到当前全排列的下一个排列序列。例如 1,2,3 的全排列1,2,31,3,22,1,32,3,13,1,23,2,1 那么 1,2,3 下一个就是 1,3,2。规定： 最后一个的下一个是第一个。 3,2,1 -&amp;gt; 1,2,3 首先，很明显可以发现：如果一个序列是非递增，那么这个序列是不能再重排，获得一个更大的数。">
+
+
+
+
+
+
+  <link rel="canonical" href="https://delveshal.github.io/2018/05/14/leetcode-题解（一）/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>leetcode 题解（一） | delveshal's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> 
+
+<div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">delveshal's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+          
+  <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+</li>
+
+      
+        
+        
+          
+  <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+</li>
+
+      
+
+      
+    </ul>
+  
+
+  
+    
+
+    
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+    
+
+  
+
+
+  
+
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://delveshal.github.io/2018/05/14/leetcode-题解（一）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="delveshal">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="delveshal's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">leetcode 题解（一）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-14T22:45:27+00:00">2018-05-14</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/leetcode/" itemprop="url" rel="index"><span itemprop="name">leetcode</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="leetcode-31-Next-Permutation"><a href="#leetcode-31-Next-Permutation" class="headerlink" title="leetcode 31. Next Permutation"></a>leetcode 31. Next Permutation</h1><h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>题目的意思的找到当前全排列的下一个排列序列。<br>例如 1,2,3 的全排列<br>1,2,3<br>1,3,2<br>2,1,3<br>2,3,1<br>3,1,2<br>3,2,1</p>
+<p>那么 1,2,3 下一个就是 1,3,2。<br><strong>规定</strong>： 最后一个的下一个是第一个。 3,2,1 -&gt; 1,2,3</p>
+<p>首先，很明显可以发现：如果一个序列是非递增，那么这个序列是不能再重排，获得一个更大的数。<br>如果把非递增数列看成序列的子结构，那么这一部分将不可以通过重排获得更大的数，只能加入一位数参与重排。重排的方法是从后往前找到第一个前面一个小于后面一个，即a[i] &gt; a[i-1]，a[k] &lt;= a[k-1],k &gt; i。 那么把a[i] 与右边的序列重排，如果要使得序列变大同时又尽可能小，那么只能选比a[i]刚好大的a[j]，两个交换，这时候还不是最小的，所以要把非递增序列从小到大排列，即把非递增序列反转.<br>例如：<br><code>1,2,4,3</code> ，那么 <code>4,3</code> 是一个部分非递增序列，只能加入<code>2</code>参与重排。<code>3</code> 刚好比 <code>2</code> 大，两个交换变成<code>1,3,4,2</code>，然后反转成<code>1,3,2,4</code>.<br><a id="more"></a></p>
+<h2 id="解题代码"><a href="#解题代码" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextPermutation</span><span class="params">(nums []<span class="keyword">int</span>)</span></span>  &#123;</span><br><span class="line">    i := <span class="built_in">len</span>(nums) - <span class="number">2</span></span><br><span class="line">    <span class="keyword">for</span> i&gt;=<span class="number">0</span> &amp;&amp; nums[i] &gt;= nums[i+<span class="number">1</span>]&#123;</span><br><span class="line">        i--</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> i&gt;=<span class="number">0</span> &#123;</span><br><span class="line">        j := <span class="built_in">len</span>(nums) - <span class="number">1</span></span><br><span class="line">        <span class="keyword">for</span> j&gt;=<span class="number">0</span> &amp;&amp; nums[j] &lt;= nums[i]&#123;</span><br><span class="line">            j--</span><br><span class="line">        &#125;</span><br><span class="line">        nums[j],nums[i] = nums[i],nums[j]</span><br><span class="line">    &#125;</span><br><span class="line">    nums = nums[i+<span class="number">1</span>:]</span><br><span class="line">    <span class="keyword">for</span> k := <span class="number">0</span>;k&lt;<span class="built_in">len</span>(nums)/<span class="number">2</span>;k++&#123;</span><br><span class="line">        nums[k],nums[<span class="built_in">len</span>(nums) - <span class="number">1</span> - k] = nums[<span class="built_in">len</span>(nums) - <span class="number">1</span> -k],nums[k]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>中间一步可以使用二分查找。不过在leetcode上都是4ms。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextPermutation</span><span class="params">(nums []<span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	i := <span class="built_in">len</span>(nums) - <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i&gt;=<span class="number">0</span> &amp;&amp; nums[i] &gt;= nums[i+<span class="number">1</span>]&#123;</span><br><span class="line">		i--</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> i&gt;=<span class="number">0</span> &#123;</span><br><span class="line">		j := binary(nums[i:],nums[i]) + i</span><br><span class="line">		nums[j],nums[i] = nums[i],nums[j]</span><br><span class="line">	&#125;</span><br><span class="line">	nums = nums[i+<span class="number">1</span>:]</span><br><span class="line">	<span class="keyword">for</span> k := <span class="number">0</span>;k&lt;<span class="built_in">len</span>(nums)/<span class="number">2</span>;k++&#123;</span><br><span class="line">		nums[k],nums[<span class="built_in">len</span>(nums) - <span class="number">1</span> - k] = nums[<span class="built_in">len</span>(nums) - <span class="number">1</span> -k],nums[k]</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">binary</span><span class="params">(nums []<span class="keyword">int</span>,target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	right := <span class="built_in">len</span>(nums)</span><br><span class="line">	<span class="keyword">for</span> left &lt; right - <span class="number">1</span> &#123;</span><br><span class="line">		mid := (right + left) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> nums[mid] &gt; target &#123;</span><br><span class="line">			left = mid</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			right = mid</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> left</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-33-Search-in-Rotated-Sorted-Array"><a href="#leetcode-33-Search-in-Rotated-Sorted-Array" class="headerlink" title="leetcode 33. Search in Rotated Sorted Array"></a>leetcode 33. Search in Rotated Sorted Array</h1><h2 id="解题思路-1"><a href="#解题思路-1" class="headerlink" title="解题思路"></a>解题思路</h2><ul>
+<li><p>第一步，通过二分查找找到翻转点。一开始我是通过比较a[mid]&gt;a[mid+1]，如果是则是翻转点，否则检查左边是否a[left]&gt;a[mid]和右边是否a[mid]&gt;a[right]，如果左边符合递归检查左边，否则检查右边。<br>例如： <code>2,4,5,6,7,0,1</code> 明显<code>6</code>不符合。检查左边<code>2,4,5</code>，不符合。检查右边<code>7,0,1</code>，符合。<code>0</code>不符合，<code>7</code> 大于 <code>0</code> 是翻转点。</p>
+</li>
+<li><p>第二步，把两段排好序的序列进行二分查找。</p>
+</li>
+</ul>
+<h2 id="解题代码-1"><a href="#解题代码-1" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">search</span><span class="params">(nums []<span class="keyword">int</span>, target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	pivot := find(nums)</span><br><span class="line">	<span class="keyword">if</span> pivot == <span class="number">-1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> binary(nums,target)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> ans <span class="keyword">int</span></span><br><span class="line">	<span class="keyword">if</span> ans = binary(nums[:pivot + <span class="number">1</span>],target);ans != <span class="number">-1</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> ans</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ans = binary(nums[pivot + <span class="number">1</span>:],target);ans == <span class="number">-1</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> ans</span><br><span class="line">	&#125;</span><br><span class="line">	ans = pivot + <span class="number">1</span> + ans</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">find</span><span class="params">(nums []<span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(nums) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">	&#125;</span><br><span class="line">	mid := (<span class="built_in">len</span>(nums)<span class="number">-1</span>)/<span class="number">2</span></span><br><span class="line">	<span class="keyword">if</span> mid + <span class="number">1</span> &gt;= <span class="built_in">len</span>(nums)&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> nums[mid] &gt; nums[mid+<span class="number">1</span>]&#123;</span><br><span class="line">		<span class="keyword">return</span> mid</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> nums[<span class="number">0</span>] &gt; nums[mid]&#123;</span><br><span class="line">		<span class="keyword">return</span> find(nums[:mid + <span class="number">1</span>])</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> nums[mid] &gt; nums[<span class="built_in">len</span>(nums)<span class="number">-1</span>]&#123;</span><br><span class="line">		<span class="keyword">return</span> mid + find(nums[mid:])</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">binary</span><span class="params">(nums []<span class="keyword">int</span>,target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	right := <span class="built_in">len</span>(nums) - <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> left &lt;= right &#123;</span><br><span class="line">		mid := (right + left) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> nums[mid] == target&#123;</span><br><span class="line">			<span class="keyword">return</span> mid</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> nums[mid] &lt; target &#123;</span><br><span class="line">			left = mid + <span class="number">1</span></span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			right = mid <span class="number">-1</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>参考了别人的寻找翻转点的方法，发现别人的思路实现起来更精简优雅。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">search</span><span class="params">(nums []<span class="keyword">int</span>, target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	pivot := find(nums)</span><br><span class="line">	<span class="keyword">var</span> ans <span class="keyword">int</span></span><br><span class="line">	<span class="keyword">if</span> ans = binary(nums[:pivot],target);ans != <span class="number">-1</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> ans</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ans = binary(nums[pivot:],target);ans == <span class="number">-1</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> ans</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> pivot + ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">find</span><span class="params">(nums []<span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	right := <span class="built_in">len</span>(nums) - <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> left &lt; right &#123;</span><br><span class="line">		mid := (left + right) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> nums[mid] &gt; nums[right]&#123;</span><br><span class="line">			left = mid + <span class="number">1</span></span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			right = mid</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> left</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">binary</span><span class="params">(nums []<span class="keyword">int</span>,target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	right := <span class="built_in">len</span>(nums) - <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> left &lt;= right &#123;</span><br><span class="line">		mid := (right + left) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> nums[mid] == target&#123;</span><br><span class="line">			<span class="keyword">return</span> mid</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> nums[mid] &lt; target &#123;</span><br><span class="line">			left = mid + <span class="number">1</span></span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			right = mid <span class="number">-1</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>利用sort包的二分查找版本</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">search</span><span class="params">(nums []<span class="keyword">int</span>, target <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	pivot := find(nums)</span><br><span class="line">	<span class="keyword">var</span> ans <span class="keyword">int</span></span><br><span class="line">	<span class="keyword">if</span> ans = sort.SearchInts(nums[:pivot], target); ans &lt; <span class="built_in">len</span>(nums) &amp;&amp; nums[ans] == target &#123;</span><br><span class="line">		<span class="keyword">return</span> ans</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ans = sort.SearchInts(nums[pivot:], target); ans+pivot &gt;= <span class="built_in">len</span>(nums) || nums[pivot+ans] != target &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> pivot + ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">find</span><span class="params">(nums []<span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	right := <span class="built_in">len</span>(nums) - <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> left &lt; right &#123;</span><br><span class="line">		mid := (left + right) / <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> nums[mid] &gt; nums[right] &#123;</span><br><span class="line">			left = mid + <span class="number">1</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			right = mid</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> left</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-46-Permutations"><a href="#leetcode-46-Permutations" class="headerlink" title="leetcode 46. Permutations"></a>leetcode 46. Permutations</h1><h2 id="解题思路-2"><a href="#解题思路-2" class="headerlink" title="解题思路"></a>解题思路</h2><p>复习一下全排列算法。<br>例如：<br>1,2,3<br>如果构造以1开头的全排列，那么可以基于<code>2,3</code>的全排列。<code>2,3</code>全排列又可以分为基于<code>2</code>和<code>3</code>开头的全排列。如果以<code>2</code>开头，那么剩下的<code>3</code>就是自己的全排列。如果以<code>3</code>开头，那么剩下的<code>2</code>就是自己的全排列。通过不断减小问题的规模，递归解决问题。</p>
+<h2 id="解题代码-2"><a href="#解题代码-2" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">permute</span><span class="params">(nums []<span class="keyword">int</span>)</span> <span class="params">(result [][]<span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(nums) &lt;= <span class="number">1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> [][]<span class="keyword">int</span>&#123;&#123;nums[<span class="number">0</span>]&#125;&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(nums); i++ &#123;</span><br><span class="line">		nums[<span class="number">0</span>], nums[i] = nums[i], nums[<span class="number">0</span>]</span><br><span class="line">		t := permute(nums[<span class="number">1</span>:])</span><br><span class="line">		nums[<span class="number">0</span>], nums[i] = nums[i], nums[<span class="number">0</span>]</span><br><span class="line">		<span class="keyword">for</span> a := <span class="keyword">range</span> t &#123;</span><br><span class="line">			result = <span class="built_in">append</span>(result, <span class="built_in">append</span>(t[a], nums[i]))</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-48-Rotate-Image"><a href="#leetcode-48-Rotate-Image" class="headerlink" title="leetcode 48. Rotate Image"></a>leetcode 48. Rotate Image</h1><h2 id="解题思路-3"><a href="#解题思路-3" class="headerlink" title="解题思路"></a>解题思路</h2><p>题目说了顺时针旋转，那么就把矩阵一圈一圈地顺时针转，然后推出以下公式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">matrix[x][y],matrix[y][n-x-1] = matrix[y][n-x-1],matrix[x][y]</span><br><span class="line">matrix[x][y],matrix[n-x-1][n-y-1] = matrix[n-x-1][n-y-1],matrix[x][y]</span><br><span class="line">matrix[x][y],matrix[n-y-1][x] = matrix[n-y-1][x],matrix[x][y]</span><br></pre></td></tr></table></figure></p>
+<h2 id="解题代码-3"><a href="#解题代码-3" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">rotate</span><span class="params">(matrix [][]<span class="keyword">int</span>)</span></span>  &#123;</span><br><span class="line">    n := <span class="built_in">len</span>(matrix)</span><br><span class="line">    <span class="keyword">for</span> y:=<span class="number">0</span>;y&lt;n<span class="number">-1</span>;y++&#123;</span><br><span class="line">        <span class="keyword">for</span> x := y;x&lt;n-y<span class="number">-1</span>;x++&#123;</span><br><span class="line">        matrix[x][y],matrix[y][n-x<span class="number">-1</span>] = matrix[y][n-x<span class="number">-1</span>],matrix[x][y]</span><br><span class="line">        matrix[x][y],matrix[n-x<span class="number">-1</span>][n-y<span class="number">-1</span>] = matrix[n-x<span class="number">-1</span>][n-y<span class="number">-1</span>],matrix[x][y]</span><br><span class="line">        matrix[x][y],matrix[n-y<span class="number">-1</span>][x] = matrix[n-y<span class="number">-1</span>][x],matrix[x][y]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-56-Merge-Intervals"><a href="#leetcode-56-Merge-Intervals" class="headerlink" title="leetcode 56. Merge Intervals"></a>leetcode 56. Merge Intervals</h1><h2 id="解题代码-4"><a href="#解题代码-4" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Definition for an interval.</span><br><span class="line"> * type Interval struct &#123;</span><br><span class="line"> *	   Start int</span><br><span class="line"> *	   End   int</span><br><span class="line"> * &#125;</span><br><span class="line"> */</span><br><span class="line">func merge(intervals []Interval) []Interval &#123;</span><br><span class="line">	if len(intervals) &lt;= 0&#123;</span><br><span class="line">		return intervals</span><br><span class="line">	&#125;</span><br><span class="line">	sort.Slice(intervals, func(i, j int) bool &#123;</span><br><span class="line">		return intervals[i].Start &lt; intervals[j].Start</span><br><span class="line">	&#125;)</span><br><span class="line">	result := make([]Interval,0,len(intervals))</span><br><span class="line">	result = append(result,intervals[0])</span><br><span class="line">	tail := len(result)-1</span><br><span class="line">	for i:=1;i&lt;len(intervals);i++&#123;</span><br><span class="line">        tail = len(result)-1</span><br><span class="line">		if result[tail].End &gt;= intervals[i].Start&#123;</span><br><span class="line">			if result[tail].End &lt; intervals[i].End&#123;</span><br><span class="line">				result[tail].End = intervals[i].End</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;else&#123;</span><br><span class="line">				result = append(result, intervals[i])</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line">    return result</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-64-Minimum-Path-Sum"><a href="#leetcode-64-Minimum-Path-Sum" class="headerlink" title="leetcode 64. Minimum Path Sum"></a>leetcode 64. Minimum Path Sum</h1><h2 id="解题思路-4"><a href="#解题思路-4" class="headerlink" title="解题思路"></a>解题思路</h2><p>某个格子只能从它的上方和左方来，所以只要最小的那个一步步构造就能得出最优解。</p>
+<h2 id="解题代码-5"><a href="#解题代码-5" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">func minPathSum(grid [][]int) int &#123;</span><br><span class="line">	if len(grid) &lt;= 0&#123;</span><br><span class="line">		return 0</span><br><span class="line">	&#125;</span><br><span class="line">	dp := make([][]int,len(grid))</span><br><span class="line">	for i := range dp &#123;</span><br><span class="line">		dp[i] = make([]int,len(grid[0]))</span><br><span class="line">	&#125;</span><br><span class="line">	dp[0][0] = grid[0][0]</span><br><span class="line">	for i := 1;i&lt;len(grid);i++&#123;</span><br><span class="line">		dp[i][0] = dp[i-1][0] + grid[i][0]</span><br><span class="line">	&#125;</span><br><span class="line">	for j:=1;j&lt;len(grid[0]);j++&#123;</span><br><span class="line">		dp[0][j] = dp[0][j-1] + grid[0][j]</span><br><span class="line">	&#125;</span><br><span class="line">	for i := 1;i&lt;len(grid);i++&#123;</span><br><span class="line">		for j:=1;j&lt;len(grid[i]);j++&#123;</span><br><span class="line">			dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	return dp[len(grid)-1][len(grid[0])-1]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func min (a,b int) int&#123;</span><br><span class="line">	if a &lt; b&#123;</span><br><span class="line">		return a</span><br><span class="line">	&#125;</span><br><span class="line">	return b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-70-Climbing-Stairs"><a href="#leetcode-70-Climbing-Stairs" class="headerlink" title="leetcode 70. Climbing Stairs"></a>leetcode 70. Climbing Stairs</h1><h2 id="解题代码-6"><a href="#解题代码-6" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var t [101]int</span><br><span class="line">func climbStairs(n int) int &#123;</span><br><span class="line">    t[0] = 1</span><br><span class="line">    t[1] = 1</span><br><span class="line">    t[2] = 2</span><br><span class="line">    if t[n] != 0&#123;</span><br><span class="line">        return t[n]</span><br><span class="line">    &#125;</span><br><span class="line">    t[n-1] = climbStairs(n-1)</span><br><span class="line">    t[n-2] = climbStairs(n-2)</span><br><span class="line">    return t[n-1] + t[n-2]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-75-Sort-Colors"><a href="#leetcode-75-Sort-Colors" class="headerlink" title="leetcode 75. Sort Colors"></a>leetcode 75. Sort Colors</h1><h2 id="解题代码-7"><a href="#解题代码-7" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">func sortColors(nums []int)  &#123;</span><br><span class="line">	j := len(nums) - 1</span><br><span class="line">	for i := 0;i&lt;len(nums) &amp;&amp; i &lt; j;i++&#123;</span><br><span class="line">		if nums[i] &gt;= 2&#123;</span><br><span class="line">			for j&gt;=0 &amp;&amp; nums[j] == 2 &#123;</span><br><span class="line">				j--</span><br><span class="line">			&#125;</span><br><span class="line">			if i &lt; j &amp;&amp; j&gt;=0 &#123;</span><br><span class="line">				nums[i],nums[j]=nums[j],nums[i]</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	for i := 0;i&lt;j;i++&#123;</span><br><span class="line">		if nums[i] &gt;= 1&#123;</span><br><span class="line">			for j&gt;=0 &amp;&amp; nums[j] &gt;= 1 &#123;</span><br><span class="line">				j--</span><br><span class="line">			&#125;</span><br><span class="line">			if i &lt; j &amp;&amp; j&gt;=0&#123;</span><br><span class="line">				nums[i],nums[j]=nums[j],nums[i]</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">func sortColors(nums []int) &#123;</span><br><span class="line">	p1 := 0</span><br><span class="line">	p2 := len(nums) - 1</span><br><span class="line">	for i := 0; i &lt;= p2; &#123;</span><br><span class="line">		switch nums[i] &#123;</span><br><span class="line">		case 0:</span><br><span class="line">			nums[i], nums[p1] = nums[p1], nums[i]</span><br><span class="line">			p1++</span><br><span class="line">			i++</span><br><span class="line">		case 1:</span><br><span class="line">			i++</span><br><span class="line">		case 2:</span><br><span class="line">			nums[i], nums[p2] = nums[p2], nums[i]</span><br><span class="line">			p2--</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-78-Subsets"><a href="#leetcode-78-Subsets" class="headerlink" title="leetcode 78. Subsets"></a>leetcode 78. Subsets</h1><h2 id="解题思路-5"><a href="#解题思路-5" class="headerlink" title="解题思路"></a>解题思路</h2><p>递归，缩小问题规模思想。例如[1,2,3]集合的子集可以<strong>由[1,2]集合的子集</strong>和<strong>[1,2]集合的子集加上[3]</strong>构成。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[1,2]:</span><br><span class="line">[</span><br><span class="line">  [],</span><br><span class="line">  [1],</span><br><span class="line">  [2],</span><br><span class="line">  [1,2]</span><br><span class="line">]</span><br><span class="line">加上[3]</span><br><span class="line">[1,2,3]:</span><br><span class="line">[</span><br><span class="line">  []</span><br><span class="line">  [1],</span><br><span class="line">  [2],</span><br><span class="line">  [1,2],    //这前面与[1,2]子集一致，这后面使用前面的加上[3]</span><br><span class="line">  [3],</span><br><span class="line">  [1,3],</span><br><span class="line">  [2,3],</span><br><span class="line">  [1,2,3]</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h2 id="解题代码-8"><a href="#解题代码-8" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">func subsets(nums []int)(result [][]int)&#123;</span><br><span class="line">	if len(nums) == 0&#123;</span><br><span class="line">		result = append(result,[]int&#123;&#125;)</span><br><span class="line">		return</span><br><span class="line">	&#125;</span><br><span class="line">	result = subsets(nums[:len(nums) - 1])</span><br><span class="line">	t := make([][]int,len(result))</span><br><span class="line">	for i := range result&#123;</span><br><span class="line">		t[i] = append(t[i],nums[len(nums)-1])</span><br><span class="line">		t[i] = append(t[i],result[i]...)</span><br><span class="line">	&#125;</span><br><span class="line">	result = append(result,t...)</span><br><span class="line">	return</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="leetcode-79-Word-Search"><a href="#leetcode-79-Word-Search" class="headerlink" title="leetcode 79. Word Search"></a>leetcode 79. Word Search</h1><h2 id="解题思路-6"><a href="#解题思路-6" class="headerlink" title="解题思路"></a>解题思路</h2><p>深搜，标记走过的路径使用特殊字符</p>
+<h2 id="解题代码-9"><a href="#解题代码-9" class="headerlink" title="解题代码"></a>解题代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">var dir = [4][]int&#123;&#123;0, 1&#125;, &#123;1, 0&#125;, &#123;-1, 0&#125;, &#123;0, -1&#125;&#125;</span><br><span class="line"></span><br><span class="line">func exist(board [][]byte, word string) bool &#123;</span><br><span class="line">	for i := range board &#123;</span><br><span class="line">		for j := range board[i] &#123;</span><br><span class="line">			if board[i][j] != word[0] &#123;</span><br><span class="line">				continue</span><br><span class="line">			&#125;</span><br><span class="line">			if dfs(board, word, i, j) &#123;</span><br><span class="line">				return true</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	return false</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func dfs(board [][]byte, word string , startx, starty int) bool &#123;</span><br><span class="line">	var zeroByte byte</span><br><span class="line">	if len(word) &lt;= 0 || board[startx][starty] != word[0] &#123;</span><br><span class="line">		return false</span><br><span class="line">	&#125;</span><br><span class="line">	if len(word) == 1 &amp;&amp; board[startx][starty] == word[0] &#123;</span><br><span class="line">		return true</span><br><span class="line">	&#125;</span><br><span class="line">	tmp := board[startx][starty]</span><br><span class="line">	board[startx][starty] = zeroByte</span><br><span class="line">	for i := range dir &#123;</span><br><span class="line">		tx := startx+dir[i][0]</span><br><span class="line">		ty := starty+dir[i][1]</span><br><span class="line">		if tx &lt; 0 || tx &gt;= len(board) &#123;</span><br><span class="line">			continue</span><br><span class="line">		&#125;</span><br><span class="line">		if ty &lt; 0 || ty &gt;= len(board[0]) &#123;</span><br><span class="line">			continue</span><br><span class="line">		&#125;</span><br><span class="line">		if dfs(board, word[1:],tx ,ty )&#123;</span><br><span class="line">			return true</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	board[startx][starty] = tmp</span><br><span class="line">	return false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/06/实现一个简单的http-proxy-demo/" rel="next" title="实现一个简单的http-proxy demo">
+                <i class="fa fa-chevron-left"></i> 实现一个简单的http-proxy demo
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/17/golang-实现文件断点续传-demo/" rel="prev" title="golang 实现文件断点续传 demo">
+                golang 实现文件断点续传 demo <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">delveshal</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-31-Next-Permutation"><span class="nav-number">1.</span> <span class="nav-text">leetcode 31. Next Permutation</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路"><span class="nav-number">1.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码"><span class="nav-number">1.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-33-Search-in-Rotated-Sorted-Array"><span class="nav-number">2.</span> <span class="nav-text">leetcode 33. Search in Rotated Sorted Array</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-1"><span class="nav-number">2.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-1"><span class="nav-number">2.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-46-Permutations"><span class="nav-number">3.</span> <span class="nav-text">leetcode 46. Permutations</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-2"><span class="nav-number">3.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-2"><span class="nav-number">3.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-48-Rotate-Image"><span class="nav-number">4.</span> <span class="nav-text">leetcode 48. Rotate Image</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-3"><span class="nav-number">4.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-3"><span class="nav-number">4.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-56-Merge-Intervals"><span class="nav-number">5.</span> <span class="nav-text">leetcode 56. Merge Intervals</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-4"><span class="nav-number">5.1.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-64-Minimum-Path-Sum"><span class="nav-number">6.</span> <span class="nav-text">leetcode 64. Minimum Path Sum</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-4"><span class="nav-number">6.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-5"><span class="nav-number">6.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-70-Climbing-Stairs"><span class="nav-number">7.</span> <span class="nav-text">leetcode 70. Climbing Stairs</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-6"><span class="nav-number">7.1.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-75-Sort-Colors"><span class="nav-number">8.</span> <span class="nav-text">leetcode 75. Sort Colors</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-7"><span class="nav-number">8.1.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-78-Subsets"><span class="nav-number">9.</span> <span class="nav-text">leetcode 78. Subsets</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-5"><span class="nav-number">9.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-8"><span class="nav-number">9.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#leetcode-79-Word-Search"><span class="nav-number">10.</span> <span class="nav-text">leetcode 79. Word Search</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解题思路-6"><span class="nav-number">10.1.</span> <span class="nav-text">解题思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解题代码-9"><span class="nav-number">10.2.</span> <span class="nav-text">解题代码</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate"> 
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">delveshal</span>
+
+  
+
+  
+</div>
+
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Muse</a> v6.0.6</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.6"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.6"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.6"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.6"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.6"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
